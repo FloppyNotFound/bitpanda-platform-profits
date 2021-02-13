@@ -1,8 +1,8 @@
 {
-  "name": "nest-typescript-starter",
+  "name": "bitpanda-platform-profits",
   "private": true,
   "version": "1.0.0",
-  "description": "Nest TypeScript starter repository",
+  "description": "Bitpanda Platform Profits calculator",
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
