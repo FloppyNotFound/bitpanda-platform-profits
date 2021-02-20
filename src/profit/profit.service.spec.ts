@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Trade } from '../models/trades.interface';
+import { TradeData } from '../models/trades.interface';
 import { ProfitService } from './profit.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,7 +9,7 @@ const generateTrade = (
   amountCrypto: number,
   amountFiat: number,
   tradeUnixTime: number,
-): Trade => {
+): TradeData => {
   return {
     type: 'trade',
     attributes: {
@@ -93,7 +93,7 @@ describe('ProfitService', () => {
   });
 
   it('should return profits, if everything was sold', () => {
-    const trades: Trade[] = [
+    const trades: TradeData[] = [
       generateTrade('sell', 1, 100, 400, 1611935044),
       generateTrade('buy', 1, 100, 200, 1611935043),
     ];
@@ -105,7 +105,7 @@ describe('ProfitService', () => {
   });
 
   it('should return profits with different prices of two buys, if everything was sold', () => {
-    const trades: Trade[] = [
+    const trades: TradeData[] = [
       generateTrade('sell', 1, 200, 500, 1611935045),
       generateTrade('buy', 1, 100, 200, 1611935044),
       generateTrade('buy', 1, 100, 100, 1611935043),
@@ -118,7 +118,7 @@ describe('ProfitService', () => {
   });
 
   it('should return profits with different prices of two buys, if not everything was sold', () => {
-    const trades: Trade[] = [
+    const trades: TradeData[] = [
       generateTrade('sell', 1, 100, 500, 1611935045),
       generateTrade('buy', 1, 100, 200, 1611935044),
       generateTrade('buy', 1, 100, 100, 1611935043),
@@ -133,7 +133,7 @@ describe('ProfitService', () => {
   });
 
   it('should return profits with different prices of two buys and two sells', () => {
-    const trades: Trade[] = [
+    const trades: TradeData[] = [
       generateTrade('sell', 1, 100, 400, 1611935046),
       generateTrade('sell', 1, 100, 500, 1611935045),
       generateTrade('buy', 1, 100, 200, 1611935044),
@@ -149,7 +149,7 @@ describe('ProfitService', () => {
   });
 
   it('should return profits of two buys and two sells of different years', () => {
-    const trades: Trade[] = [
+    const trades: TradeData[] = [
       generateTrade('sell', 1, 100, 400, 1650000000),
       generateTrade('sell', 1, 100, 500, 1611935045),
       generateTrade('buy', 1, 100, 200, 1611935044),

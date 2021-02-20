@@ -5,6 +5,7 @@ import { ProfitService } from './profit/profit.service';
 import { WalletsService } from './wallets/wallets.service';
 import { TradesService } from './trades/trades.service';
 import { WithdrawalsService } from './withdrawals/withdrawals.service';
+import { ProfitsService } from './profits/profits.service';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { WithdrawalsService } from './withdrawals/withdrawals.service';
     WalletsService,
     TradesService,
     WithdrawalsService,
+    ProfitsService,
   ],
 })
 export class AppModule {}
