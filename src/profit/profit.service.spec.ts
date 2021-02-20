@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TradeData } from '../models/trades.interface';
 import { ProfitService } from './profit.service';
 import { v4 as uuidv4 } from 'uuid';
+import { TransferData } from '../models/transfers.interface';
 
 const generateTrade = (
   type: 'buy' | 'sell',
@@ -17,14 +18,14 @@ const generateTrade = (
       type,
       cryptocoin_id: cryptocointId.toString(),
       fiat_id: '1',
-      amount_fiat: amountFiat.toString(), // '96.90',
-      amount_cryptocoin: amountCrypto.toString(), // '1999.84521321',
+      amount_fiat: amountFiat.toString(),
+      amount_cryptocoin: amountCrypto.toString(),
       fiat_to_eur_rate: '1.00000000',
       wallet_id: 'eae0d8b2-d2bf-4401-bf99-fc5f9a8747cb',
       fiat_wallet_id: 'af5d6d64-59e4-11e9-8c75-0a0e6623f374',
       time: {
-        date_iso8601: '', // 2021-02-04T09:30:46+01:00
-        unix: tradeUnixTime.toString(), // '1612427446',
+        date_iso8601: '',
+        unix: tradeUnixTime.toString(),
       },
       price: '0.047144',
       is_swap: false,
@@ -77,6 +78,45 @@ const generateTrade = (
   };
 };
 
+const generateWithdrawal = (
+  cryptocoinId: number,
+  amountCrypto: number,
+  transactionUnixTime: number,
+): TransferData => {
+  return {
+    id: uuidv4(),
+    type: 'wallet_transaction',
+    attributes: {
+      amount: amountCrypto.toString(),
+      recipient: '',
+      time: {
+        date_iso8601: '',
+        unix: transactionUnixTime.toString(),
+      },
+      confirmations: 99,
+      in_or_out: 'outgoing',
+      type: 'withdrawal',
+      status: 'finished',
+      amount_eur: '',
+      wallet_id: '2e378c99-7715-49d5-8062-128c6152c36d',
+      confirmation_by: 'not_required',
+      confirmed: false,
+      cryptocoin_id: cryptocoinId.toString(),
+      last_changed: {
+        date_iso8601: '',
+        unix: '',
+      },
+      fee: '',
+      current_fiat_id: '1',
+      current_fiat_amount: '',
+      is_metal_storage_fee: false,
+      tags: [],
+      public_status: 'finished',
+      is_bfc: false,
+    },
+  };
+};
+
 describe('ProfitService', () => {
   let service: ProfitService;
 
@@ -98,7 +138,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 200, 1611935043),
     ];
 
-    const result = service.getProfits(trades, '');
+    const result = service.getWalletState(trades, [], '');
 
     expect(result.amountCrypto).toBe(0);
     expect(result.profitPerYear.get(2021)).toBe(200);
@@ -111,7 +151,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getProfits(trades, '');
+    const result = service.getWalletState(trades, [], '');
 
     expect(result.amountCrypto).toBe(0);
     expect(result.profitPerYear.get(2021)).toBe(200);
@@ -124,7 +164,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getProfits(trades, '');
+    const result = service.getWalletState(trades, [], '');
 
     expect(result.amountCrypto).toBe(100);
     expect(result.profitPerYear.get(2021)).toBe(400);
@@ -140,7 +180,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getProfits(trades, '');
+    const result = service.getWalletState(trades, [], '');
 
     expect(result.amountCrypto).toBe(0);
     expect(result.profitPerYear.get(2021)).toBe(600);
@@ -156,10 +196,56 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getProfits(trades, '');
+    const result = service.getWalletState(trades, [], '');
 
     expect(result.amountCrypto).toBe(0);
     expect(result.profitPerYear.get(2021)).toBe(400);
     expect(result.profitPerYear.get(2022)).toBe(200);
+  });
+
+  it('should reduce asset, if a withdrawal was made', () => {
+    const trades: TradeData[] = [
+      generateTrade('sell', 1, 50, 500, 1611935045),
+      generateTrade('buy', 1, 100, 100, 1611935043),
+    ];
+
+    const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935044)];
+
+    const result = service.getWalletState(trades, withdrawals, '');
+
+    expect(result.amountCrypto).toBe(0);
+    expect(result.profitPerYear.get(2021)).toBe(450);
+  });
+
+  it('should reduce profit, if a withdrawal was made between sells and no more of the cheaper coins are left', () => {
+    const trades: TradeData[] = [
+      generateTrade('sell', 1, 100, 500, 1611935046),
+      generateTrade('buy', 1, 100, 200, 1611935044),
+      generateTrade('buy', 1, 100, 100, 1611935043),
+    ];
+
+    const withdrawals: TransferData[] = [
+      generateWithdrawal(1, 100, 1611935045),
+    ];
+
+    const result = service.getWalletState(trades, withdrawals, '');
+
+    expect(result.amountCrypto).toBe(0);
+    expect(result.profitPerYear.get(2021)).toBe(300);
+  });
+
+  it('should reduce profit, if a withdrawal was made between sells and only some more of the cheaper coins are left', () => {
+    const trades: TradeData[] = [
+      generateTrade('sell', 1, 100, 500, 1611935046),
+      generateTrade('buy', 1, 100, 200, 1611935044),
+      generateTrade('buy', 1, 100, 100, 1611935043),
+    ];
+
+    const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935045)];
+
+    const result = service.getWalletState(trades, withdrawals, '');
+
+    expect(result.amountCrypto).toBe(50);
+    expect(result.profitPerYear.get(2021)).toBe(350);
   });
 });

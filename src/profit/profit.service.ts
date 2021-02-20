@@ -3,10 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { WalletState } from './models/wallet-state.interface';
 import { Crypto } from './models/crypto.interface';
 import * as dayjs from 'dayjs';
+import { TransferData } from '../models/transfers.interface';
 
 @Injectable()
 export class ProfitService {
-  getProfits(trades: TradeData[], cryptoSymbol: string): WalletState | null {
+  getWalletState(
+    trades: TradeData[],
+    withdrawals: TransferData[],
+    cryptoSymbol: string,
+  ): WalletState | null {
     if (!trades?.length) {
       return null;
     }
@@ -15,6 +20,8 @@ export class ProfitService {
     const taxablePerYear = new Map<number, number>();
 
     const assets = new Map<number, Crypto>();
+
+    let previousTradeUnix = 0;
 
     for (let i = trades.length - 1; i >= 0; i--) {
       const trade = trades[i];
@@ -27,14 +34,38 @@ export class ProfitService {
       const amountFiat = Number(trade.attributes.amount_fiat);
       const pricePerCoin = amountFiat / amountCrypto;
 
+      //#region Reduce Assets by Withdrawals
+      let amountWithdrawals = this.getAmountWithdrawals(
+        withdrawals,
+        trade,
+        previousTradeUnix,
+      );
+
+      assets.forEach((a) => {
+        // If there have been withdrawals before this sell,
+        // the amount of available assets are decreased
+        if (amountWithdrawals) {
+          if (amountWithdrawals >= a.amount) {
+            amountWithdrawals -= a.amount;
+            a.amount = 0;
+          } else {
+            a.amount -= amountWithdrawals;
+            amountWithdrawals = 0;
+          }
+        }
+      });
+      //#endregion
+
       if (trade.attributes.type === 'buy') {
         assets.set(Number(trade.attributes.time.unix), <Crypto>{
           amount: amountCrypto,
+          amountOriginally: amountCrypto,
           priceFiat: amountFiat,
           priceFiatPerCoin: amountFiat / amountCrypto,
         });
       } else if (trade.attributes.type === 'sell') {
         let amountCryptosToSell = amountCrypto;
+
         assets.forEach((a, key) => {
           if (!amountCryptosToSell || !a.amount) {
             return;
@@ -49,7 +80,7 @@ export class ProfitService {
             ? amountCryptosToSell
             : amountAvailableOfThisDate;
 
-          const pricePerCoinOnTimeOfBuy = a.priceFiat / a.amount;
+          const pricePerCoinOnTimeOfBuy = a.priceFiat / a.amountOriginally;
 
           const sellPrice = amountOfThisCoinDateToSell * pricePerCoin;
           const buyPrice = amountOfThisCoinDateToSell * pricePerCoinOnTimeOfBuy;
@@ -79,6 +110,8 @@ export class ProfitService {
       } else {
         throw new Error('Unknown trade type ' + trade.attributes.type);
       }
+
+      previousTradeUnix = Number(trade.attributes.time.unix);
     }
 
     return <WalletState>{
@@ -91,6 +124,21 @@ export class ProfitService {
       taxablePerYear,
       assets,
     };
+  }
+
+  private getAmountWithdrawals(
+    withdrawals: TransferData[],
+    trade: TradeData,
+    previousTradeUnix: number,
+  ) {
+    return withdrawals
+      .filter(
+        (w) =>
+          Number(w.attributes.time.unix) < Number(trade.attributes.time.unix) &&
+          Number(w.attributes.time.unix) > previousTradeUnix,
+      )
+      .map((w) => Number(w.attributes.amount))
+      .reduce((prev, cur) => prev + cur, 0);
   }
 
   private getProfit(

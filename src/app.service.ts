@@ -70,8 +70,13 @@ export class AppService {
         (t) => t.attributes.wallet_id === w.id,
       );
 
-      const profits = this._profitService.getProfits(
+      const withdrawalsOfWallet = res.withdrawals.filter(
+        (w) => w.attributes.wallet_id === w.id,
+      );
+
+      const profits = this._profitService.getWalletState(
         tradesOfWallet,
+        withdrawalsOfWallet,
         w.attributes.cryptocoin_symbol,
       );
 
