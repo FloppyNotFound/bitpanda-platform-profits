@@ -132,11 +132,12 @@ export class ProfitService {
     previousTradeUnix: number,
   ) {
     return withdrawals
-      .filter(
-        (w) =>
-          Number(w.attributes.time.unix) < Number(trade.attributes.time.unix) &&
-          Number(w.attributes.time.unix) > previousTradeUnix,
-      )
+      .filter((w) => {
+        const withdrawalTime = Number(w.attributes.time.unix);
+        const tradeTime = Number(trade.attributes.time.unix);
+
+        return withdrawalTime < tradeTime && withdrawalTime > previousTradeUnix;
+      })
       .map((w) => Number(w.attributes.amount))
       .reduce((prev, cur) => prev + cur, 0);
   }

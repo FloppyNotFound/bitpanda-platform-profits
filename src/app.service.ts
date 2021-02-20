@@ -65,19 +65,19 @@ export class AppService {
 
   private toWalletStates(res: ProfitCalculationInput): WalletState[] {
     const walletStates: WalletState[] = [];
-    res.wallets.forEach((w) => {
+    res.wallets.forEach((wallet) => {
       const tradesOfWallet = res.trades.filter(
-        (t) => t.attributes.wallet_id === w.id,
+        (t) => t.attributes.wallet_id === wallet.id,
       );
 
       const withdrawalsOfWallet = res.withdrawals.filter(
-        (w) => w.attributes.wallet_id === w.id,
+        (withdrawal) => withdrawal.attributes.wallet_id === wallet.id,
       );
 
       const profits = this._profitService.getWalletState(
         tradesOfWallet,
         withdrawalsOfWallet,
-        w.attributes.cryptocoin_symbol,
+        wallet.attributes.cryptocoin_symbol,
       );
 
       walletStates.push(profits);
