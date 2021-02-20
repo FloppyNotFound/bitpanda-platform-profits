@@ -9,7 +9,7 @@ export interface TransfersResponse extends BitpandaResponse {
   data: TransferData[];
 }
 
-interface TransferData extends BitpandaResponseData {
+export interface TransferData extends BitpandaResponseData {
   attributes: TransferAttributes;
 }
 

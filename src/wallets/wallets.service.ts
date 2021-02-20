@@ -1,9 +1,10 @@
 import { HttpService, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthHeader } from 'src/models/auth-header.interface';
-import { TradesResponse } from 'src/models/trades.interface';
-import { WalletResponse, Wallet } from 'src/models/wallet.interface';
+import { TransferData } from '../models/transfers.interface';
+import { AuthHeader } from '../models/auth-header.interface';
+import { TradeData } from '../models/trades.interface';
+import { WalletResponse, Wallet } from '../models/wallet.interface';
 
 @Injectable()
 export class WalletsService {
@@ -21,15 +22,23 @@ export class WalletsService {
   }
 
   filterWalletsInUse(
-    walletResponse: WalletResponse,
-    tradesResponse: TradesResponse,
+    wallets: Wallet[],
+    trades: TradeData[],
+    withdrawalsResponse: TransferData[],
   ): Wallet[] {
-    const uniqueWalletIdsInUse = tradesResponse.data
+    const uniqueWalletIdsUsedInTrades = trades
       .map((trade) => trade.attributes.wallet_id)
       .filter((v, i, a) => a.indexOf(v) == i);
 
-    return walletResponse.data.filter((wallet) =>
-      uniqueWalletIdsInUse.includes(wallet.id),
-    );
+    const uniqueWalletIdsUsedInWithdrawals = withdrawalsResponse
+      .map((trade) => trade.attributes.wallet_id)
+      .filter((v, i, a) => a.indexOf(v) == i);
+
+    const uniqueWlletIdsUsed = [
+      ...uniqueWalletIdsUsedInTrades,
+      ...uniqueWalletIdsUsedInWithdrawals,
+    ];
+
+    return wallets.filter((wallet) => uniqueWlletIdsUsed.includes(wallet.id));
   }
 }

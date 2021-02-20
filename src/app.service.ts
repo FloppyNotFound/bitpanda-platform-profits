@@ -5,14 +5,25 @@ import { Wallet } from './models/wallet.interface';
 import { WalletStateResponseItem } from './profit/models/wallet-state-response-item.interface';
 import { WalletState } from './profit/models/wallet-state.interface';
 import { WalletStateResponse } from './profit/models/wallet-state-response.interface';
+import { TransferData } from './models/transfers.interface';
+import { AuthHeader } from './models/auth-header.interface';
 
 @Injectable()
 export class AppService {
   constructor(private _profitService: ProfitService) {}
 
+  getHttpHeaders(apiToken: string): AuthHeader {
+    const httpGetHeaders = {
+      'X-API-KEY': apiToken,
+    };
+
+    return httpGetHeaders;
+  }
+
   toProfitResponse(res: {
     wallets: Wallet[];
     trades: TradeData[];
+    withdrawals: TransferData[];
   }): WalletStateResponse {
     const walletStates = this.toWalletStates(res);
     const responseItems = this.toWalletStateResponseItems(walletStates);

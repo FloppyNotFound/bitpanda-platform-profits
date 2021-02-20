@@ -1,8 +1,8 @@
 import { HttpService, Injectable } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { AuthHeader } from 'src/models/auth-header.interface';
-import { TradesResponse } from 'src/models/trades.interface';
+import { AuthHeader } from '../models/auth-header.interface';
+import { TradesResponse } from '../models/trades.interface';
 
 @Injectable()
 export class TradesService {
@@ -26,5 +26,17 @@ export class TradesService {
         return of(trades);
       }),
     );
+  }
+
+  /**
+   * Gets the url with query params required to load trades
+   * @param baseUrl
+   * @param pageSize Max 500
+   */
+  getTradesUrl(baseUrl: string, pageSize: number): URL {
+    const tradesUrl = new URL('trades', baseUrl);
+    const tradesPageSize = pageSize.toString();
+    tradesUrl.searchParams.set('page_size', tradesPageSize);
+    return tradesUrl;
   }
 }
