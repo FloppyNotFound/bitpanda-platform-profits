@@ -3,7 +3,7 @@ import { HttpService, Injectable } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { AuthHeader } from './models/auth-header.interface';
-import { Trade, TradesResponse } from './models/trades.interface';
+import { TradeData, TradesResponse } from './models/trades.interface';
 import { Wallet, WalletResponse } from './models/wallet.interface';
 import { WalletStateResponseItem } from './profit/models/wallet-state-response-item.interface';
 import { WalletState } from './profit/models/wallet-state.interface';
@@ -62,7 +62,7 @@ export class AppService {
 
   toProfitResponse(res: {
     wallets: Wallet[];
-    trades: Trade[];
+    trades: TradeData[];
   }): WalletStateResponse {
     const walletStates = this.toWalletStates(res);
     const responseItems = this.toWalletStateResponseItems(walletStates);
@@ -100,7 +100,7 @@ export class AppService {
     );
   }
 
-  private toWalletStates(res: { wallets: Wallet[]; trades: Trade[] }) {
+  private toWalletStates(res: { wallets: Wallet[]; trades: TradeData[] }) {
     const walletStates: WalletState[] = [];
     res.wallets.forEach((w) => {
       const tradesOfWallet = res.trades.filter(

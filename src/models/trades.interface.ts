@@ -1,90 +1,16 @@
-export interface TradesResponse {
-  data: Trade[];
-  meta: Meta;
-  links: Links;
+import { BestFeeCollection } from './best-fee-collection.interface';
+import { BitpandaResponseData } from './bitpanda-response-data.interface';
+import { BitpandaResponse } from './bitpanda-response.interface';
+import { RelatedTradeAttributes } from './related-trade-attributes.interface';
+
+export interface TradesResponse extends BitpandaResponse {
+  data: TradeData[];
 }
 
-interface Links {
-  next: string;
-  last: string;
-  self: string;
-}
-
-interface Meta {
-  total_count: number;
-  page: number;
-  page_size: number;
-}
-
-export interface Trade {
-  type: string;
+export interface TradeData extends BitpandaResponseData {
   attributes: TradeAttributes;
-  id: string;
 }
 
-interface TradeAttributes {
-  status: string;
-  type: string;
-  cryptocoin_id: string;
-  fiat_id: string;
-  amount_fiat: string;
-  amount_cryptocoin: string;
-  fiat_to_eur_rate: string;
-  wallet_id: string;
-  fiat_wallet_id: string;
-  payment_option_id?: string;
-  time: Time;
-  price: string;
-  is_swap: boolean;
-  is_savings?: boolean;
-  tags?: unknown[];
-  bfc_used: boolean;
-  best_fee_collection: BestFeeCoolection;
-}
-
-interface Time {
-  date_iso8601: string;
-  unix: string;
-}
-
-interface BestFeeCoolection {
-  type: string;
-  attributes: BestFeeAttributes;
-}
-
-interface BestFeeAttributes {
-  best_current_price_eur: string;
-  best_used_price_eur: string;
-  bfc_deduction: number;
-  bfc_market_value_eur: string;
-  wallet_transaction: WalletTransaction;
-}
-
-interface WalletTransaction {
-  type: string;
-  attributes: WalletTransactionAttributes;
-  id: string;
-}
-
-interface WalletTransactionAttributes {
-  amount: string;
-  recipient: string;
-  time: Time;
-  confirmations: number;
-  in_or_out: string;
-  type: string;
-  status: string;
-  amount_eur: string;
-  wallet_id: string;
-  confirmation_by: string;
-  confirmed: boolean;
-  cryptocoin_id: string;
-  last_changed: Time;
-  fee: string;
-  current_fiat_id: string;
-  current_fiat_amount: string;
-  is_metal_storage_fee: boolean;
-  tags: any[];
-  public_status: string;
-  is_bfc: boolean;
+interface TradeAttributes extends RelatedTradeAttributes {
+  best_fee_collection: BestFeeCollection;
 }

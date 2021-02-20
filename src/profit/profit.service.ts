@@ -1,12 +1,12 @@
+import { TradeData } from './../models/trades.interface';
 import { Injectable } from '@nestjs/common';
-import { Trade } from '../models/trades.interface';
 import { WalletState } from './models/wallet-state.interface';
 import { Crypto } from './models/crypto.interface';
 import * as dayjs from 'dayjs';
 
 @Injectable()
 export class ProfitService {
-  getProfits(trades: Trade[], cryptoSymbol: string): WalletState | null {
+  getProfits(trades: TradeData[], cryptoSymbol: string): WalletState | null {
     if (!trades?.length) {
       return null;
     }
