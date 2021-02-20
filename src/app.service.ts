@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { AuthHeader } from './models/auth-header.interface';
 import { TradeData, TradesResponse } from './models/trades.interface';
-import { Wallet, WalletResponse } from './models/wallet.interface';
+import { Wallet } from './models/wallet.interface';
 import { WalletStateResponseItem } from './profit/models/wallet-state-response-item.interface';
 import { WalletState } from './profit/models/wallet-state.interface';
 import { WalletStateResponse } from './profit/models/wallet-state-response.interface';
@@ -15,30 +15,6 @@ export class AppService {
     private _httpService: HttpService,
     private _profitService: ProfitService,
   ) {}
-
-  getWallets(
-    walletsUrl: URL,
-    httpHeaders: AuthHeader,
-  ): Observable<WalletResponse> {
-    return this._httpService
-      .get(walletsUrl.href, {
-        headers: httpHeaders,
-      })
-      .pipe(map((res) => <WalletResponse>res.data));
-  }
-
-  filterWalletsInUse(
-    walletResponse: WalletResponse,
-    tradesResponse: TradesResponse,
-  ): Wallet[] {
-    const uniqueWalletIdsInUse = tradesResponse.data
-      .map((trade) => trade.attributes.wallet_id)
-      .filter((v, i, a) => a.indexOf(v) == i);
-
-    return walletResponse.data.filter((wallet) =>
-      uniqueWalletIdsInUse.includes(wallet.id),
-    );
-  }
 
   getTrades(
     tradesUrl: URL,

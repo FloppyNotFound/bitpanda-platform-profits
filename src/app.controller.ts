@@ -10,12 +10,16 @@ import { AppService } from './app.service';
 import { map, switchMap } from 'rxjs/operators';
 import { AuthHeader } from './models/auth-header.interface';
 import { WalletStateResponse } from './profit/models/wallet-state-response.interface';
+import { WalletsService } from './wallets/wallets.service';
 
 @Controller()
 export class AppController {
   private _baseUrl = 'https://api.bitpanda.com/v1/';
 
-  constructor(private readonly _appService: AppService) {}
+  constructor(
+    private readonly _appService: AppService,
+    private _walletsService: WalletsService,
+  ) {}
 
   /**
    * Calculate bitpanda platform trade profits
@@ -43,11 +47,11 @@ export class AppController {
 
     const httpHeaders = this.getHttpHeaders(apiToken);
 
-    return this._appService.getWallets(walletsUrl, httpHeaders).pipe(
+    return this._walletsService.getWallets(walletsUrl, httpHeaders).pipe(
       switchMap((walletResponse) =>
         this._appService.getTrades(tradesUrl, httpHeaders).pipe(
           map((tradesResponse) => ({
-            wallets: this._appService.filterWalletsInUse(
+            wallets: this._walletsService.filterWalletsInUse(
               walletResponse,
               tradesResponse,
             ),
