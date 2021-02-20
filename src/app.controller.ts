@@ -11,6 +11,7 @@ import { map, switchMap } from 'rxjs/operators';
 import { AuthHeader } from './models/auth-header.interface';
 import { WalletStateResponse } from './profit/models/wallet-state-response.interface';
 import { WalletsService } from './wallets/wallets.service';
+import { TradesService } from './trades/trades.service';
 
 @Controller()
 export class AppController {
@@ -19,6 +20,7 @@ export class AppController {
   constructor(
     private readonly _appService: AppService,
     private _walletsService: WalletsService,
+    private _tradesService: TradesService,
   ) {}
 
   /**
@@ -49,7 +51,7 @@ export class AppController {
 
     return this._walletsService.getWallets(walletsUrl, httpHeaders).pipe(
       switchMap((walletResponse) =>
-        this._appService.getTrades(tradesUrl, httpHeaders).pipe(
+        this._tradesService.getTrades(tradesUrl, httpHeaders).pipe(
           map((tradesResponse) => ({
             wallets: this._walletsService.filterWalletsInUse(
               walletResponse,

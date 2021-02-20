@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProfitService } from './profit/profit.service';
 import { WalletsService } from './wallets/wallets.service';
+import { TradesService } from './trades/trades.service';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { WalletsService } from './wallets/wallets.service';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, ProfitService, WalletsService],
+  providers: [AppService, ProfitService, WalletsService, TradesService],
 })
 export class AppModule {}

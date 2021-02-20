@@ -1,9 +1,6 @@
 import { ProfitService } from './profit/profit.service';
-import { HttpService, Injectable } from '@nestjs/common';
-import { Observable, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
-import { AuthHeader } from './models/auth-header.interface';
-import { TradeData, TradesResponse } from './models/trades.interface';
+import { Injectable } from '@nestjs/common';
+import { TradeData } from './models/trades.interface';
 import { Wallet } from './models/wallet.interface';
 import { WalletStateResponseItem } from './profit/models/wallet-state-response-item.interface';
 import { WalletState } from './profit/models/wallet-state.interface';
@@ -11,30 +8,7 @@ import { WalletStateResponse } from './profit/models/wallet-state-response.inter
 
 @Injectable()
 export class AppService {
-  constructor(
-    private _httpService: HttpService,
-    private _profitService: ProfitService,
-  ) {}
-
-  getTrades(
-    tradesUrl: URL,
-    httpHeaders: AuthHeader,
-  ): Observable<TradesResponse> {
-    return this._httpService.get(tradesUrl.href, { headers: httpHeaders }).pipe(
-      map((res) => <TradesResponse>res.data),
-      switchMap((trades) => {
-        if (trades.links.next) {
-          tradesUrl.searchParams.set('page', (trades.meta.page + 1).toString());
-
-          return this.getTrades(tradesUrl, httpHeaders).pipe(
-            tap((t) => (t.data = [...trades.data, ...t.data])),
-          );
-        }
-
-        return of(trades);
-      }),
-    );
-  }
+  constructor(private _profitService: ProfitService) {}
 
   toProfitResponse(res: {
     wallets: Wallet[];
