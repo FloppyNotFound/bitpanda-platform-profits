@@ -82,6 +82,7 @@ const generateWithdrawal = (
   cryptocoinId: number,
   amountCrypto: number,
   transactionUnixTime: number,
+  fee = 0,
 ): TransferData => {
   return {
     id: uuidv4(),
@@ -106,7 +107,7 @@ const generateWithdrawal = (
         date_iso8601: '',
         unix: '',
       },
-      fee: '',
+      fee: fee.toString(),
       current_fiat_id: '1',
       current_fiat_amount: '',
       is_metal_storage_fee: false,
@@ -247,5 +248,21 @@ describe('ProfitService', () => {
 
     expect(result.amountCrypto).toBe(50);
     expect(result.profitPerYear.get(2021)).toBe(350);
+  });
+
+  it('should reduce asset, if a withdrawal was made and fees were charged', () => {
+    const trades: TradeData[] = [
+      generateTrade('sell', 1, 50, 500, 1611935045),
+      generateTrade('buy', 1, 100, 100, 1611935043),
+    ];
+
+    const withdrawals: TransferData[] = [
+      generateWithdrawal(1, 45, 1611935044, 5),
+    ];
+
+    const result = service.getWalletState(trades, withdrawals, '');
+
+    expect(result.amountCrypto).toBe(0);
+    expect(result.profitPerYear.get(2021)).toBe(450);
   });
 });

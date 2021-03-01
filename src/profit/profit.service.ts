@@ -138,7 +138,7 @@ export class ProfitService {
 
         return withdrawalTime < tradeTime && withdrawalTime > previousTradeUnix;
       })
-      .map((w) => Number(w.attributes.amount))
+      .map((w) => Number(w.attributes.amount) + Number(w.attributes.fee))
       .reduce((prev, cur) => prev + cur, 0);
   }
 
