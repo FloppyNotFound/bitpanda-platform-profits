@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { ProfitService } from './profit/profit.service';
 import { WalletsService } from './wallets/wallets.service';
 import { TradesService } from './trades/trades.service';
-import { WithdrawalsService } from './withdrawals/withdrawals.service';
+import { TransactionsService } from './transactions/transactions.service';
 import { ProfitsService } from './profits/profits.service';
 
 @Module({
@@ -20,7 +20,7 @@ import { ProfitsService } from './profits/profits.service';
     ProfitService,
     WalletsService,
     TradesService,
-    WithdrawalsService,
+    TransactionsService,
     ProfitsService,
   ],
 })

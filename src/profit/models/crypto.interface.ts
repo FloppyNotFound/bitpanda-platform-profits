@@ -1,6 +1,6 @@
 export interface Crypto {
   amount: number;
   amountOriginally: number;
-  priceFiat: number;
+  amountEur: number;
   priceFiatPerCoin: number;
 }

@@ -24,19 +24,19 @@ export class WalletsService {
   filterWalletsInUse(
     wallets: Wallet[],
     trades: TradeData[],
-    withdrawalsResponse: TransferData[],
+    transactions: TransferData[],
   ): Wallet[] {
     const uniqueWalletIdsUsedInTrades = trades
       .map((trade) => trade.attributes.wallet_id)
       .filter((v, i, a) => a.indexOf(v) == i);
 
-    const uniqueWalletIdsUsedInWithdrawals = withdrawalsResponse
-      .map((trade) => trade.attributes.wallet_id)
+    const uniqueWalletIdsUsedInTransactions = transactions
+      .map((transaction) => transaction.attributes.wallet_id)
       .filter((v, i, a) => a.indexOf(v) == i);
 
     const uniqueWlletIdsUsed = [
       ...uniqueWalletIdsUsedInTrades,
-      ...uniqueWalletIdsUsedInWithdrawals,
+      ...uniqueWalletIdsUsedInTransactions,
     ];
 
     return wallets.filter((wallet) => uniqueWlletIdsUsed.includes(wallet.id));

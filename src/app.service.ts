@@ -6,8 +6,12 @@ import { WalletStateResponse } from './profit/models/wallet-state-response.inter
 import { AuthHeader } from './models/auth-header.interface';
 import { ProfitCalculationInput } from './profit/models/profit-calculation-input.interface';
 import { ProfitsService } from './profits/profits.service';
-import { Withdrawal } from './profit/models/withdrawal.interface';
+import {
+  Transaction,
+  TransactionType,
+} from './profit/models/transaction.interface';
 import { Trade } from './profit/models/trade.interface';
+import { TransferData } from './models/transfers.interface';
 
 @Injectable()
 export class AppService {
@@ -58,6 +62,7 @@ export class AppService {
         <WalletStateResponseItem>{
           cryptoSymbol: state.cryptoSymbol,
           amountCrypto: state.amountCrypto,
+          amountFiat: state.amountFiat,
           assets: Array.from(state.assets).filter((a) => a[1].amount),
           profitPerYear: Array.from(state.profitPerYear),
           taxablePerYear: Array.from(state.taxablePerYear),
@@ -68,23 +73,9 @@ export class AppService {
   private toWalletStates(res: ProfitCalculationInput): WalletState[] {
     const walletStates: WalletState[] = [];
     res.wallets.forEach((wallet) => {
-      const tradesOfWallet = res.trades.filter(
-        (t) => t.attributes.wallet_id === wallet.id,
-      );
-
-      const withdrawalsOfWallet = res.withdrawals
-        .filter((withdrawal) => withdrawal.attributes.wallet_id === wallet.id)
+      const tradesOfWallet = res.trades
+        .filter((t) => t.attributes.wallet_id === wallet.id)
         .map(
-          (w) =>
-            <Withdrawal>{
-              unixTime: Number(w.attributes.time.unix),
-              amount: Number(w.attributes.amount),
-              fee: Number(w.attributes.fee),
-            },
-        );
-
-      const profits = this._profitService.getWalletState(
-        tradesOfWallet.map(
           (t) =>
             <Trade>{
               cryptoCoinId: Number(t.attributes.cryptocoin_id),
@@ -93,8 +84,20 @@ export class AppService {
               amountFiat: Number(t.attributes.amount_fiat),
               type: t.attributes.type,
             },
-        ),
+        );
+
+      const withdrawalsOfWallet = res.withdrawals
+        .filter((withdrawal) => withdrawal.attributes.wallet_id === wallet.id)
+        .map((w) => this.toTransaction(w, 'withdrawal'));
+
+      const depositsOfWallet = res.deposits
+        .filter((deposit) => deposit.attributes.wallet_id === wallet.id)
+        .map((d) => this.toTransaction(d, 'deposit'));
+
+      const profits = this._profitService.getWalletState(
+        tradesOfWallet,
         withdrawalsOfWallet,
+        depositsOfWallet,
         wallet.attributes.cryptocoin_symbol,
         Date.now() / 1000,
       );
@@ -105,5 +108,15 @@ export class AppService {
     });
 
     return walletStates;
+  }
+
+  private toTransaction(w: TransferData, type: TransactionType): Transaction {
+    return <Transaction>{
+      type,
+      unixTime: Number(w.attributes.time.unix),
+      amountCrypto: Number(w.attributes.amount),
+      amountEur: Number(w.attributes.amount_eur),
+      fee: Number(w.attributes.fee),
+    };
   }
 }

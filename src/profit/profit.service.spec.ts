@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfitService } from './profit.service';
-import { Withdrawal } from './models/withdrawal.interface';
+import { Transaction } from './models/transaction.interface';
 import { Trade } from './models/trade.interface';
 
 const generateTrade = (
@@ -23,9 +23,9 @@ const generateWithdrawal = (
   amountCrypto: number,
   transactionUnixTime: number,
   fee = 0,
-): Withdrawal => {
-  return <Withdrawal>{
-    amount: amountCrypto,
+): Transaction => {
+  return <Transaction>{
+    amountCrypto: amountCrypto,
     unixTime: transactionUnixTime,
     fee,
   };
@@ -52,7 +52,13 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 200, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
+    const result = service.getWalletState(
+      trades,
+      [],
+      [],
+      '',
+      Date.now() / 1000,
+    );
 
     expect(result?.amountCrypto).toBe(0);
     expect(result?.profitPerYear.get(2021)).toBe(200);
@@ -65,7 +71,13 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
+    const result = service.getWalletState(
+      trades,
+      [],
+      [],
+      '',
+      Date.now() / 1000,
+    );
 
     expect(result?.amountCrypto).toBe(0);
     expect(result?.profitPerYear.get(2021)).toBe(200);
@@ -78,7 +90,13 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
+    const result = service.getWalletState(
+      trades,
+      [],
+      [],
+      '',
+      Date.now() / 1000,
+    );
 
     expect(result?.amountCrypto).toBe(100);
     expect(result?.profitPerYear.get(2021)).toBe(400);
@@ -94,7 +112,13 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
+    const result = service.getWalletState(
+      trades,
+      [],
+      [],
+      '',
+      Date.now() / 1000,
+    );
 
     expect(result?.amountCrypto).toBe(0);
     expect(result?.profitPerYear.get(2021)).toBe(600);
@@ -110,7 +134,13 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
+    const result = service.getWalletState(
+      trades,
+      [],
+      [],
+      '',
+      Date.now() / 1000,
+    );
 
     expect(result?.amountCrypto).toBe(0);
     expect(result?.profitPerYear.get(2021)).toBe(400);
@@ -123,11 +153,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: Withdrawal[] = [generateWithdrawal(50, 1611935044)];
+    const withdrawals: Transaction[] = [generateWithdrawal(50, 1611935044)];
 
     const result = service.getWalletState(
       trades,
       withdrawals,
+      [],
       '',
       Date.now() / 1000,
     );
@@ -143,11 +174,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: Withdrawal[] = [generateWithdrawal(100, 1611935045)];
+    const withdrawals: Transaction[] = [generateWithdrawal(100, 1611935045)];
 
     const result = service.getWalletState(
       trades,
       withdrawals,
+      [],
       '',
       Date.now() / 1000,
     );
@@ -163,11 +195,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: Withdrawal[] = [generateWithdrawal(50, 1611935045)];
+    const withdrawals: Transaction[] = [generateWithdrawal(50, 1611935045)];
 
     const result = service.getWalletState(
       trades,
       withdrawals,
+      [],
       '',
       Date.now() / 1000,
     );
@@ -182,11 +215,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: Withdrawal[] = [generateWithdrawal(45, 1611935044, 5)];
+    const withdrawals: Transaction[] = [generateWithdrawal(45, 1611935044, 5)];
 
     const result = service.getWalletState(
       trades,
       withdrawals,
+      [],
       '',
       Date.now() / 1000,
     );
@@ -198,11 +232,12 @@ describe('ProfitService', () => {
   it('should reduce BEST, if BEST is used for paying fees', () => {
     const trades: Trade[] = [generateTrade('buy', 1, 100, 100, 1611935043)];
 
-    const withdrawals: Withdrawal[] = [generateWithdrawal(0, 1611935044, 5)];
+    const withdrawals: Transaction[] = [generateWithdrawal(0, 1611935044, 5)];
 
     const result = service.getWalletState(
       trades,
       withdrawals,
+      [],
       '',
       Date.now() / 1000,
     );

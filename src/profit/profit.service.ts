@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { WalletState } from './models/wallet-state.interface';
 import { Crypto } from './models/crypto.interface';
 import * as dayjs from 'dayjs';
-import { Withdrawal } from './models/withdrawal.interface';
+import { Transaction } from './models/transaction.interface';
 import minus from '../helpers/minus';
 import plus from '../helpers/plus';
 import { Trade } from './models/trade.interface';
@@ -11,7 +11,8 @@ import { Trade } from './models/trade.interface';
 export class ProfitService {
   getWalletState(
     trades: Trade[],
-    withdrawals: Withdrawal[],
+    withdrawals: Transaction[],
+    deposits: Transaction[],
     cryptoSymbol: string,
     untilUnixSeconds: number,
   ): WalletState | null {
@@ -40,13 +41,15 @@ export class ProfitService {
       );
 
       this.reduceAssetsByWithdrawals(assets, amountWithdrawals);
+
+      this.increaseAssetsByDeposits(deposits, trade.unixTime, assets);
       //#endregion
 
       if (trade.type === 'buy') {
         assets.set(trade.unixTime, <Crypto>{
           amount: amountCrypto,
           amountOriginally: amountCrypto,
-          priceFiat: amountFiat,
+          amountEur: amountFiat,
           priceFiatPerCoin: amountFiat / amountCrypto,
         });
       } else if (trade.type === 'sell') {
@@ -66,7 +69,7 @@ export class ProfitService {
             ? amountCryptosToSell
             : amountAvailableOfThisDate;
 
-          const pricePerCoinOnTimeOfBuy = a.priceFiat / a.amountOriginally;
+          const pricePerCoinOnTimeOfBuy = a.amountEur / a.amountOriginally;
 
           const sellPrice = amountOfThisCoinDateToSell * pricePerCoin;
           const buyPrice = amountOfThisCoinDateToSell * pricePerCoinOnTimeOfBuy;
@@ -108,6 +111,8 @@ export class ProfitService {
     );
 
     this.reduceAssetsByWithdrawals(assets, amountWithdrawals);
+
+    this.increaseAssetsByDeposits(deposits, untilUnixSeconds, assets);
     //#endregion
 
     return <WalletState>{
@@ -121,6 +126,24 @@ export class ProfitService {
       taxablePerYear,
       assets,
     };
+  }
+
+  private increaseAssetsByDeposits(
+    deposits: Transaction[],
+    unixTime: number,
+    assets: Map<number, Crypto>,
+  ) {
+    deposits
+      .filter((d) => this.checkShouldTransactionShouldBeHandled(d, unixTime))
+      .forEach((d) => {
+        d.wasHandled = true;
+        assets.set(d.unixTime, <Crypto>{
+          amount: d.amountCrypto,
+          amountOriginally: d.amountCrypto,
+          amountEur: d.amountEur,
+          priceFiatPerCoin: d.amountEur / d.amountCrypto,
+        });
+      });
   }
 
   private reduceAssetsByWithdrawals(
@@ -176,14 +199,21 @@ export class ProfitService {
     return [newAssetAmount, newAmountWithdrawals];
   }
 
-  private getAmountWithdrawals(withdrawals: Withdrawal[], untilUnix: number) {
+  private getAmountWithdrawals(withdrawals: Transaction[], untilUnix: number) {
     return withdrawals
-      .filter((w) => !w.wasHandled && w.unixTime <= untilUnix)
+      .filter((w) => this.checkShouldTransactionShouldBeHandled(w, untilUnix))
       .map((w) => {
         w.wasHandled = true;
-        return plus(w.amount, w.fee);
+        return plus(w.amountCrypto, w.fee);
       })
       .reduce((prev, cur) => plus(prev, cur), 0);
+  }
+
+  private checkShouldTransactionShouldBeHandled(
+    w: Transaction,
+    untilUnix: number,
+  ): boolean {
+    return !w.wasHandled && w.unixTime <= untilUnix;
   }
 
   private getProfit(

@@ -11,7 +11,7 @@ import { map, switchMap } from 'rxjs/operators';
 import { WalletStateResponse } from './profit/models/wallet-state-response.interface';
 import { WalletsService } from './wallets/wallets.service';
 import { TradesService } from './trades/trades.service';
-import { WithdrawalsService } from './withdrawals/withdrawals.service';
+import { TransactionsService } from './transactions/transactions.service';
 
 @Controller()
 export class AppController {
@@ -21,7 +21,7 @@ export class AppController {
     private readonly _appService: AppService,
     private _walletsService: WalletsService,
     private _tradesService: TradesService,
-    private _withdrawalsService: WithdrawalsService,
+    private _transactionsService: TransactionsService,
   ) {}
 
   /**
@@ -44,9 +44,15 @@ export class AppController {
     // Get all user crypto wallets
     const walletsUrl = new URL('wallets', this._baseUrl);
     const tradesUrl = this._tradesService.getTradesUrl(this._baseUrl, 250);
-    const withdrawalsUrl = this._withdrawalsService.getWithdrawalsUrl(
+    const withdrawalsUrl = this._transactionsService.getTransactionsUrl(
       this._baseUrl,
       250,
+      'withdrawal',
+    );
+    const depositsUrl = this._transactionsService.getTransactionsUrl(
+      this._baseUrl,
+      250,
+      'deposit',
     );
 
     const httpHeaders = this._appService.getHttpHeaders(apiToken);
@@ -61,18 +67,24 @@ export class AppController {
         ),
       ),
       switchMap((response) =>
-        this._withdrawalsService
-          .getWithdrawals(withdrawalsUrl, httpHeaders)
+        this._transactionsService
+          .getTransactions(withdrawalsUrl, httpHeaders)
           .pipe(map((withdrawals) => ({ ...response, withdrawals }))),
+      ),
+      switchMap((response) =>
+        this._transactionsService
+          .getTransactions(depositsUrl, httpHeaders)
+          .pipe(map((deposits) => ({ ...response, deposits }))),
       ),
       map((res) => ({
         wallets: this._walletsService.filterWalletsInUse(
           res.wallets.data,
           res.trades.data,
-          res.withdrawals.data,
+          [...res.withdrawals.data, ...res.deposits.data],
         ),
         trades: res.trades.data,
         withdrawals: res.withdrawals.data,
+        deposits: res.deposits.data,
       })),
       map((res) => this._appService.toProfitResponse(res)),
     );
