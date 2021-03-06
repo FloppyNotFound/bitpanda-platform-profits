@@ -75,4 +75,4 @@ If you like this tool and it helps you getting a better view on your Bitpanda as
 
 ## License
 
-Bitpanda Platform Profits is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Bitpanda Platform Profits is [MIT licensed](https://github.com/floppynotfound/bitpanda-platform-profits/blob/master/LICENSE).
