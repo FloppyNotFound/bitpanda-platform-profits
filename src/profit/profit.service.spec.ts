@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TradeData } from '../models/trades.interface';
 import { ProfitService } from './profit.service';
 import { v4 as uuidv4 } from 'uuid';
-import { TransferData } from '../models/transfers.interface';
+import { Withdrawal } from '../models/withdrawal.interface';
 
 const generateTrade = (
   type: 'buy' | 'sell',
@@ -79,43 +79,14 @@ const generateTrade = (
 };
 
 const generateWithdrawal = (
-  cryptocoinId: number,
   amountCrypto: number,
   transactionUnixTime: number,
   fee = 0,
-  isBfc = false,
-): TransferData => {
-  return {
-    id: uuidv4(),
-    type: 'wallet_transaction',
-    attributes: {
-      amount: amountCrypto.toString(),
-      recipient: '',
-      time: {
-        date_iso8601: '',
-        unix: transactionUnixTime.toString(),
-      },
-      confirmations: 99,
-      in_or_out: 'outgoing',
-      type: 'withdrawal',
-      status: 'finished',
-      amount_eur: '',
-      wallet_id: '2e378c99-7715-49d5-8062-128c6152c36d',
-      confirmation_by: 'not_required',
-      confirmed: false,
-      cryptocoin_id: cryptocoinId.toString(),
-      last_changed: {
-        date_iso8601: '',
-        unix: '',
-      },
-      fee: fee.toString(),
-      current_fiat_id: '1',
-      current_fiat_amount: '',
-      is_metal_storage_fee: false,
-      tags: [],
-      public_status: 'finished',
-      is_bfc: isBfc,
-    },
+): Withdrawal => {
+  return <Withdrawal>{
+    amount: amountCrypto,
+    unixTime: transactionUnixTime,
+    fee,
   };
 };
 
@@ -211,7 +182,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935044)];
+    const withdrawals: Withdrawal[] = [generateWithdrawal(50, 1611935044)];
 
     const result = service.getWalletState(
       trades,
@@ -231,9 +202,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: TransferData[] = [
-      generateWithdrawal(1, 100, 1611935045),
-    ];
+    const withdrawals: Withdrawal[] = [generateWithdrawal(100, 1611935045)];
 
     const result = service.getWalletState(
       trades,
@@ -253,7 +222,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935045)];
+    const withdrawals: Withdrawal[] = [generateWithdrawal(50, 1611935045)];
 
     const result = service.getWalletState(
       trades,
@@ -272,9 +241,7 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const withdrawals: TransferData[] = [
-      generateWithdrawal(1, 45, 1611935044, 5),
-    ];
+    const withdrawals: Withdrawal[] = [generateWithdrawal(45, 1611935044, 5)];
 
     const result = service.getWalletState(
       trades,
@@ -290,9 +257,7 @@ describe('ProfitService', () => {
   it('should reduce asset, if BEST is used', () => {
     const trades: TradeData[] = [generateTrade('buy', 1, 100, 100, 1611935043)];
 
-    const withdrawals: TransferData[] = [
-      generateWithdrawal(1, 0, 1611935044, 5, true),
-    ];
+    const withdrawals: Withdrawal[] = [generateWithdrawal(0, 1611935044, 5)];
 
     const result = service.getWalletState(
       trades,

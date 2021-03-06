@@ -6,6 +6,7 @@ import { WalletStateResponse } from './profit/models/wallet-state-response.inter
 import { AuthHeader } from './models/auth-header.interface';
 import { ProfitCalculationInput } from './profit/models/profit-calculation-input.interface';
 import { ProfitsService } from './profits/profits.service';
+import { Withdrawal } from './models/withdrawal.interface';
 
 @Injectable()
 export class AppService {
@@ -70,9 +71,16 @@ export class AppService {
         (t) => t.attributes.wallet_id === wallet.id,
       );
 
-      const withdrawalsOfWallet = res.withdrawals.filter(
-        (withdrawal) => withdrawal.attributes.wallet_id === wallet.id,
-      );
+      const withdrawalsOfWallet = res.withdrawals
+        .filter((withdrawal) => withdrawal.attributes.wallet_id === wallet.id)
+        .map(
+          (w) =>
+            <Withdrawal>{
+              unixTime: Number(w.attributes.time.unix),
+              amount: Number(w.attributes.amount),
+              fee: Number(w.attributes.fee),
+            },
+        );
 
       const profits = this._profitService.getWalletState(
         tradesOfWallet,

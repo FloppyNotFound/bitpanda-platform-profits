@@ -3,13 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { WalletState } from './models/wallet-state.interface';
 import { Crypto } from './models/crypto.interface';
 import * as dayjs from 'dayjs';
-import { TransferData } from '../models/transfers.interface';
+import { Withdrawal } from 'src/models/withdrawal.interface';
 
 @Injectable()
 export class ProfitService {
   getWalletState(
     trades: TradeData[],
-    withdrawals: TransferData[],
+    withdrawals: Withdrawal[],
     cryptoSymbol: string,
     untilUnixSeconds: number,
   ): WalletState | null {
@@ -21,8 +21,6 @@ export class ProfitService {
     const taxablePerYear = new Map<number, number>();
 
     const assets = new Map<number, Crypto>();
-
-    let previousTradeUnix = 0;
 
     for (let i = trades.length - 1; i >= 0; i--) {
       const trade = trades[i];
@@ -39,21 +37,22 @@ export class ProfitService {
       let amountWithdrawals = this.getAmountWithdrawals(
         withdrawals,
         Number(trade.attributes.time.unix),
-        previousTradeUnix,
       );
 
-      assets.forEach((a) => {
-        const [
-          newAssetAmount,
-          newAmountWithdrawals,
-        ] = this.getReducedAssetAmountByWithdrawals(
-          a.amount,
-          amountWithdrawals,
-        );
+      if (amountWithdrawals) {
+        assets.forEach((a) => {
+          const [
+            newAssetAmount,
+            newAmountWithdrawals,
+          ] = this.getReducedAssetAmountByWithdrawals(
+            a.amount,
+            amountWithdrawals,
+          );
 
-        a.amount = newAssetAmount;
-        amountWithdrawals = newAmountWithdrawals;
-      });
+          a.amount = newAssetAmount;
+          amountWithdrawals = newAmountWithdrawals;
+        });
+      }
       //#endregion
 
       if (trade.attributes.type === 'buy') {
@@ -110,26 +109,28 @@ export class ProfitService {
       } else {
         throw new Error('Unknown trade type ' + trade.attributes.type);
       }
-
-      previousTradeUnix = Number(trade.attributes.time.unix);
     }
 
     //#region Reduce Assets by Withdrawals until today
     let amountWithdrawals = this.getAmountWithdrawals(
       withdrawals,
       untilUnixSeconds,
-      previousTradeUnix,
     );
 
-    assets.forEach((a) => {
-      const [
-        newAssetAmount,
-        newAmountWithdrawals,
-      ] = this.getReducedAssetAmountByWithdrawals(a.amount, amountWithdrawals);
+    if (amountWithdrawals) {
+      assets.forEach((a) => {
+        const [
+          newAssetAmount,
+          newAmountWithdrawals,
+        ] = this.getReducedAssetAmountByWithdrawals(
+          a.amount,
+          amountWithdrawals,
+        );
 
-      a.amount = newAssetAmount;
-      amountWithdrawals = newAmountWithdrawals;
-    });
+        a.amount = newAssetAmount;
+        amountWithdrawals = newAmountWithdrawals;
+      });
+    }
     //#endregion
 
     return <WalletState>{
@@ -175,18 +176,13 @@ export class ProfitService {
     return [newAssetAmount, newAmountWithdrawals];
   }
 
-  private getAmountWithdrawals(
-    withdrawals: TransferData[],
-    untilUnix: number,
-    previousTradeUnix: number,
-  ) {
+  private getAmountWithdrawals(withdrawals: Withdrawal[], untilUnix: number) {
     return withdrawals
-      .filter((w) => {
-        const withdrawalTime = Number(w.attributes.time.unix);
-
-        return withdrawalTime < untilUnix && withdrawalTime > previousTradeUnix;
+      .filter((w) => !w.wasHandled && w.unixTime <= untilUnix)
+      .map((w) => {
+        w.wasHandled = true;
+        return w.amount + w.fee;
       })
-      .map((w) => Number(w.attributes.amount) + Number(w.attributes.fee))
       .reduce((prev, cur) => prev + cur, 0);
   }
 
