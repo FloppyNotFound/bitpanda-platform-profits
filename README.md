@@ -49,7 +49,7 @@ $ npm run start:prod
 
 ### Starting the calculation
 
-To be able to run the calculation, you need a Bitpanda Platform API token, which can be created on the Bitpanda website withing your user settings.
+To be able to run the calculation, you need a Bitpanda Platform API token, which can be created on the Bitpanda website within your user settings.
 
 Once you created a token, you can start the calculation by opening the website and providing the "apiToken" as a query parameter (replace TOKEN with the actual token):
 
