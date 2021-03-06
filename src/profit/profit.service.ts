@@ -34,7 +34,7 @@ export class ProfitService {
       const amountFiat = Number(trade.amountFiat);
       const pricePerCoin = amountFiat / amountCrypto;
 
-      //#region Reduce Assets by Withdrawals until current trade
+      //#region Reduce by Withdrawals and increase by Deposits until current trade
       const amountWithdrawals = this.getAmountWithdrawals(
         withdrawals,
         trade.unixTime,
@@ -104,7 +104,7 @@ export class ProfitService {
       }
     }
 
-    //#region Reduce Assets by Withdrawals until today
+    //#region Reduce by Withdrawals and increase by Deposits until given date
     const amountWithdrawals = this.getAmountWithdrawals(
       withdrawals,
       untilUnixSeconds,
