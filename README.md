@@ -12,7 +12,7 @@
 
 ## Description
 
-[Bitpanda Platform](https://developers.bitpanda.com/platform/) is a tool for calculating profits and amount of avalable assets by using the FIFO method (first in, first out).
+[Bitpanda Platform](https://developers.bitpanda.com/platform/) Profits is a tool for calculating profits and amount of avalable assets by using the FIFO method (first in, first out).
 
 Transactions done after holding a crypto for more than one year are tax free in Germany. This is respected within the app.
 
