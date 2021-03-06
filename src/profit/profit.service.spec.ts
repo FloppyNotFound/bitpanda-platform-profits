@@ -254,7 +254,7 @@ describe('ProfitService', () => {
     expect(result?.profitPerYear.get(2021)).toBe(450);
   });
 
-  it('should reduce asset, if BEST is used', () => {
+  it('should reduce BEST, if BEST is used for paying fees', () => {
     const trades: TradeData[] = [generateTrade('buy', 1, 100, 100, 1611935043)];
 
     const withdrawals: Withdrawal[] = [generateWithdrawal(0, 1611935044, 5)];
