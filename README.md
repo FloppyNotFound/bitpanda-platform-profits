@@ -66,7 +66,7 @@ $ npm run test
 
 ## Support
 
-If you like this tool and it helps you getting a better view on your Bitpanda assets and profits, I'd appreciate if you support my work via [Paypal Me](https://paypal.me/floppynotfound) or <a href="bitcoin:3ALWrVpWQdeYWzBivV33eSfpU1GcvxbJXW">Bitcoin</a> (min BTC 0.0010).
+If you like this tool and it helps you getting a better view on your Bitpanda assets and profits, I'd appreciate if you support my work via [Paypal Me](https://paypal.me/floppynotfound) or <a href="bitcoin:3ALWrVpWQdeYWzBivV33eSfpU1GcvxbJXW">Bitcoin </a> (Wallet Adress: 3ALWrVpWQdeYWzBivV33eSfpU1GcvxbJXW, min BTC 0.0010).
 
 ## Stay in touch
 
