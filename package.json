@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "description": "Bitpanda Platform Profits calculator",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://FloppyNotFound/bitpanda-platform-profits.git"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
