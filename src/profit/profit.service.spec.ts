@@ -83,6 +83,7 @@ const generateWithdrawal = (
   amountCrypto: number,
   transactionUnixTime: number,
   fee = 0,
+  isBfc = false,
 ): TransferData => {
   return {
     id: uuidv4(),
@@ -113,7 +114,7 @@ const generateWithdrawal = (
       is_metal_storage_fee: false,
       tags: [],
       public_status: 'finished',
-      is_bfc: false,
+      is_bfc: isBfc,
     },
   };
 };
@@ -139,10 +140,10 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 200, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '');
+    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(200);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(200);
   });
 
   it('should return profits with different prices of two buys, if everything was sold', () => {
@@ -152,10 +153,10 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '');
+    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(200);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(200);
   });
 
   it('should return profits with different prices of two buys, if not everything was sold', () => {
@@ -165,12 +166,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '');
+    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
 
-    expect(result.amountCrypto).toBe(100);
-    expect(result.profitPerYear.get(2021)).toBe(400);
-    expect(result.assets.get(1611935043).amount).toBe(0);
-    expect(result.assets.get(1611935044).amount).toBe(100);
+    expect(result?.amountCrypto).toBe(100);
+    expect(result?.profitPerYear.get(2021)).toBe(400);
+    expect(result?.assets?.get(1611935043)?.amount).toBe(0);
+    expect(result?.assets?.get(1611935044)?.amount).toBe(100);
   });
 
   it('should return profits with different prices of two buys and two sells', () => {
@@ -181,12 +182,12 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '');
+    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(600);
-    expect(result.assets.get(1611935043).amount).toBe(0);
-    expect(result.assets.get(1611935044).amount).toBe(0);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(600);
+    expect(result?.assets?.get(1611935043)?.amount).toBe(0);
+    expect(result?.assets?.get(1611935044)?.amount).toBe(0);
   });
 
   it('should return profits of two buys and two sells of different years', () => {
@@ -197,11 +198,11 @@ describe('ProfitService', () => {
       generateTrade('buy', 1, 100, 100, 1611935043),
     ];
 
-    const result = service.getWalletState(trades, [], '');
+    const result = service.getWalletState(trades, [], '', Date.now() / 1000);
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(400);
-    expect(result.profitPerYear.get(2022)).toBe(200);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(400);
+    expect(result?.profitPerYear.get(2022)).toBe(200);
   });
 
   it('should reduce asset, if a withdrawal was made', () => {
@@ -212,10 +213,15 @@ describe('ProfitService', () => {
 
     const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935044)];
 
-    const result = service.getWalletState(trades, withdrawals, '');
+    const result = service.getWalletState(
+      trades,
+      withdrawals,
+      '',
+      Date.now() / 1000,
+    );
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(450);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(450);
   });
 
   it('should reduce profit, if a withdrawal was made between sells and no more of the cheaper coins are left', () => {
@@ -229,10 +235,15 @@ describe('ProfitService', () => {
       generateWithdrawal(1, 100, 1611935045),
     ];
 
-    const result = service.getWalletState(trades, withdrawals, '');
+    const result = service.getWalletState(
+      trades,
+      withdrawals,
+      '',
+      Date.now() / 1000,
+    );
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(300);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(300);
   });
 
   it('should reduce profit, if a withdrawal was made between sells and only some more of the cheaper coins are left', () => {
@@ -244,10 +255,15 @@ describe('ProfitService', () => {
 
     const withdrawals: TransferData[] = [generateWithdrawal(1, 50, 1611935045)];
 
-    const result = service.getWalletState(trades, withdrawals, '');
+    const result = service.getWalletState(
+      trades,
+      withdrawals,
+      '',
+      Date.now() / 1000,
+    );
 
-    expect(result.amountCrypto).toBe(50);
-    expect(result.profitPerYear.get(2021)).toBe(350);
+    expect(result?.amountCrypto).toBe(50);
+    expect(result?.profitPerYear.get(2021)).toBe(350);
   });
 
   it('should reduce asset, if a withdrawal was made and fees were charged', () => {
@@ -260,9 +276,31 @@ describe('ProfitService', () => {
       generateWithdrawal(1, 45, 1611935044, 5),
     ];
 
-    const result = service.getWalletState(trades, withdrawals, '');
+    const result = service.getWalletState(
+      trades,
+      withdrawals,
+      '',
+      Date.now() / 1000,
+    );
 
-    expect(result.amountCrypto).toBe(0);
-    expect(result.profitPerYear.get(2021)).toBe(450);
+    expect(result?.amountCrypto).toBe(0);
+    expect(result?.profitPerYear.get(2021)).toBe(450);
+  });
+
+  it('should reduce asset, if BEST is used', () => {
+    const trades: TradeData[] = [generateTrade('buy', 1, 100, 100, 1611935043)];
+
+    const withdrawals: TransferData[] = [
+      generateWithdrawal(1, 0, 1611935044, 5, true),
+    ];
+
+    const result = service.getWalletState(
+      trades,
+      withdrawals,
+      '',
+      Date.now() / 1000,
+    );
+
+    expect(result?.amountCrypto).toBe(95);
   });
 });

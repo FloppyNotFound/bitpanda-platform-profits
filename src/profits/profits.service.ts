@@ -26,7 +26,9 @@ export class ProfitsService {
 
     profitPerYearItems.forEach((profit) => {
       profit.forEach((p) => {
-        const prevVal = profitsPerYear.has(p[0]) ? profitsPerYear.get(p[0]) : 0;
+        const prevVal = profitsPerYear.has(p[0])
+          ? Number(profitsPerYear.get(p[0]))
+          : 0;
 
         profitsPerYear.set(p[0], prevVal + p[1]);
       });

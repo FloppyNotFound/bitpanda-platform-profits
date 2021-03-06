@@ -78,9 +78,12 @@ export class AppService {
         tradesOfWallet,
         withdrawalsOfWallet,
         wallet.attributes.cryptocoin_symbol,
+        Date.now() / 1000,
       );
 
-      walletStates.push(profits);
+      if (profits) {
+        walletStates.push(profits);
+      }
     });
 
     return walletStates;

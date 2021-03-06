@@ -11,6 +11,7 @@ export class ProfitService {
     trades: TradeData[],
     withdrawals: TransferData[],
     cryptoSymbol: string,
+    untilUnixSeconds: number,
   ): WalletState | null {
     if (!trades?.length) {
       return null;
@@ -34,25 +35,24 @@ export class ProfitService {
       const amountFiat = Number(trade.attributes.amount_fiat);
       const pricePerCoin = amountFiat / amountCrypto;
 
-      //#region Reduce Assets by Withdrawals
+      //#region Reduce Assets by Withdrawals until current trade
       let amountWithdrawals = this.getAmountWithdrawals(
         withdrawals,
-        trade,
+        Number(trade.attributes.time.unix),
         previousTradeUnix,
       );
 
       assets.forEach((a) => {
-        // If there have been withdrawals before this sell,
-        // the amount of available assets are decreased
-        if (amountWithdrawals) {
-          if (amountWithdrawals >= a.amount) {
-            amountWithdrawals -= a.amount;
-            a.amount = 0;
-          } else {
-            a.amount -= amountWithdrawals;
-            amountWithdrawals = 0;
-          }
-        }
+        const [
+          newAssetAmount,
+          newAmountWithdrawals,
+        ] = this.getReducedAssetAmountByWithdrawals(
+          a.amount,
+          amountWithdrawals,
+        );
+
+        a.amount = newAssetAmount;
+        amountWithdrawals = newAmountWithdrawals;
       });
       //#endregion
 
@@ -114,6 +114,24 @@ export class ProfitService {
       previousTradeUnix = Number(trade.attributes.time.unix);
     }
 
+    //#region Reduce Assets by Withdrawals until today
+    let amountWithdrawals = this.getAmountWithdrawals(
+      withdrawals,
+      untilUnixSeconds,
+      previousTradeUnix,
+    );
+
+    assets.forEach((a) => {
+      const [
+        newAssetAmount,
+        newAmountWithdrawals,
+      ] = this.getReducedAssetAmountByWithdrawals(a.amount, amountWithdrawals);
+
+      a.amount = newAssetAmount;
+      amountWithdrawals = newAmountWithdrawals;
+    });
+    //#endregion
+
     return <WalletState>{
       cryptoId: Number(trades[0].attributes.cryptocoin_id),
       cryptoSymbol,
@@ -126,17 +144,47 @@ export class ProfitService {
     };
   }
 
+  /**
+   * @returns Tuple with reduced asset amount as first and reduced amount withdrawals as second value
+   */
+  private getReducedAssetAmountByWithdrawals(
+    assetAmount: number,
+    amountWithdrawals: number,
+  ): [number, number] {
+    if (!amountWithdrawals) {
+      return [assetAmount, amountWithdrawals];
+    }
+
+    let newAssetAmount = assetAmount;
+    let newAmountWithdrawals = amountWithdrawals;
+
+    if (amountWithdrawals >= assetAmount) {
+      newAmountWithdrawals = amountWithdrawals - assetAmount;
+      newAssetAmount = 0;
+    } else {
+      newAssetAmount = assetAmount - amountWithdrawals;
+      newAmountWithdrawals = 0;
+    }
+
+    if (newAssetAmount < 0 || newAmountWithdrawals < 0) {
+      throw new Error(
+        'Reducing assets by withdrawals resulted in negative result',
+      );
+    }
+
+    return [newAssetAmount, newAmountWithdrawals];
+  }
+
   private getAmountWithdrawals(
     withdrawals: TransferData[],
-    trade: TradeData,
+    untilUnix: number,
     previousTradeUnix: number,
   ) {
     return withdrawals
       .filter((w) => {
         const withdrawalTime = Number(w.attributes.time.unix);
-        const tradeTime = Number(trade.attributes.time.unix);
 
-        return withdrawalTime < tradeTime && withdrawalTime > previousTradeUnix;
+        return withdrawalTime < untilUnix && withdrawalTime > previousTradeUnix;
       })
       .map((w) => Number(w.attributes.amount) + Number(w.attributes.fee))
       .reduce((prev, cur) => prev + cur, 0);
