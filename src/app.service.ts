@@ -6,7 +6,8 @@ import { WalletStateResponse } from './profit/models/wallet-state-response.inter
 import { AuthHeader } from './models/auth-header.interface';
 import { ProfitCalculationInput } from './profit/models/profit-calculation-input.interface';
 import { ProfitsService } from './profits/profits.service';
-import { Withdrawal } from './models/withdrawal.interface';
+import { Withdrawal } from './profit/models/withdrawal.interface';
+import { Trade } from './profit/models/trade.interface';
 
 @Injectable()
 export class AppService {
@@ -83,7 +84,16 @@ export class AppService {
         );
 
       const profits = this._profitService.getWalletState(
-        tradesOfWallet,
+        tradesOfWallet.map(
+          (t) =>
+            <Trade>{
+              cryptoCoinId: Number(t.attributes.cryptocoin_id),
+              unixTime: Number(t.attributes.time.unix),
+              amountCrypto: Number(t.attributes.amount_cryptocoin),
+              amountFiat: Number(t.attributes.amount_fiat),
+              type: t.type,
+            },
+        ),
         withdrawalsOfWallet,
         wallet.attributes.cryptocoin_symbol,
         Date.now() / 1000,
