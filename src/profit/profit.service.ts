@@ -128,21 +128,22 @@ export class ProfitService {
     assets: Map<number, Crypto>,
     amountWithdrawals: number,
   ): void {
-    if (!amountWithdrawals) {
-      return;
-    }
+    for (const asset of assets.values()) {
+      if (!amountWithdrawals) {
+        break;
+      }
 
-    assets.forEach((a) => {
       const [
         newAssetAmount,
         newAmountWithdrawals,
-      ] = this.getReducedAssetAmountByWithdrawals(a.amount, amountWithdrawals);
+      ] = this.getReducedAssetAmountByWithdrawals(
+        asset.amount,
+        amountWithdrawals,
+      );
 
-      a.amount = newAssetAmount;
+      asset.amount = newAssetAmount;
       amountWithdrawals = newAmountWithdrawals;
-    });
-
-    return;
+    }
   }
 
   /**
