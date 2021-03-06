@@ -34,25 +34,12 @@ export class ProfitService {
       const pricePerCoin = amountFiat / amountCrypto;
 
       //#region Reduce Assets by Withdrawals until current trade
-      let amountWithdrawals = this.getAmountWithdrawals(
+      const amountWithdrawals = this.getAmountWithdrawals(
         withdrawals,
         Number(trade.attributes.time.unix),
       );
 
-      if (amountWithdrawals) {
-        assets.forEach((a) => {
-          const [
-            newAssetAmount,
-            newAmountWithdrawals,
-          ] = this.getReducedAssetAmountByWithdrawals(
-            a.amount,
-            amountWithdrawals,
-          );
-
-          a.amount = newAssetAmount;
-          amountWithdrawals = newAmountWithdrawals;
-        });
-      }
+      this.reduceAssetsByWithdrawals(assets, amountWithdrawals);
       //#endregion
 
       if (trade.attributes.type === 'buy') {
@@ -112,25 +99,12 @@ export class ProfitService {
     }
 
     //#region Reduce Assets by Withdrawals until today
-    let amountWithdrawals = this.getAmountWithdrawals(
+    const amountWithdrawals = this.getAmountWithdrawals(
       withdrawals,
       untilUnixSeconds,
     );
 
-    if (amountWithdrawals) {
-      assets.forEach((a) => {
-        const [
-          newAssetAmount,
-          newAmountWithdrawals,
-        ] = this.getReducedAssetAmountByWithdrawals(
-          a.amount,
-          amountWithdrawals,
-        );
-
-        a.amount = newAssetAmount;
-        amountWithdrawals = newAmountWithdrawals;
-      });
-    }
+    this.reduceAssetsByWithdrawals(assets, amountWithdrawals);
     //#endregion
 
     return <WalletState>{
@@ -143,6 +117,27 @@ export class ProfitService {
       taxablePerYear,
       assets,
     };
+  }
+
+  private reduceAssetsByWithdrawals(
+    assets: Map<number, Crypto>,
+    amountWithdrawals: number,
+  ): void {
+    if (!amountWithdrawals) {
+      return;
+    }
+
+    assets.forEach((a) => {
+      const [
+        newAssetAmount,
+        newAmountWithdrawals,
+      ] = this.getReducedAssetAmountByWithdrawals(a.amount, amountWithdrawals);
+
+      a.amount = newAssetAmount;
+      amountWithdrawals = newAmountWithdrawals;
+    });
+
+    return;
   }
 
   /**
