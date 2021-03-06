@@ -91,7 +91,7 @@ export class AppService {
               unixTime: Number(t.attributes.time.unix),
               amountCrypto: Number(t.attributes.amount_cryptocoin),
               amountFiat: Number(t.attributes.amount_fiat),
-              type: t.type,
+              type: t.attributes.type,
             },
         ),
         withdrawalsOfWallet,
