@@ -10,7 +10,7 @@ import { ProfitsService } from './profits/profits.service';
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 10000,
+      timeout: 60000,
       maxRedirects: 5,
     }),
   ],
