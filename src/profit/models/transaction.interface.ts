@@ -1,4 +1,4 @@
-export type TransactionType = 'deposit' | 'withdrawal';
+export type TransactionType = 'deposit' | 'withdrawal' | 'transfer';
 
 export interface Transaction {
   wasHandled?: boolean;

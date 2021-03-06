@@ -7,4 +7,5 @@ export interface ProfitCalculationInput {
   trades: TradeData[];
   withdrawals: TransferData[];
   deposits: TransferData[];
+  transfers: TransferData[];
 }

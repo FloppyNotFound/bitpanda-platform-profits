@@ -54,6 +54,11 @@ export class AppController {
       250,
       'deposit',
     );
+    const transfersUrl = this._transactionsService.getTransactionsUrl(
+      this._baseUrl,
+      250,
+      'transfer',
+    );
 
     const httpHeaders = this._appService.getHttpHeaders(apiToken);
 
@@ -76,6 +81,11 @@ export class AppController {
           .getTransactions(depositsUrl, httpHeaders)
           .pipe(map((deposits) => ({ ...response, deposits }))),
       ),
+      switchMap((response) =>
+        this._transactionsService
+          .getTransactions(transfersUrl, httpHeaders)
+          .pipe(map((transfers) => ({ ...response, deposits: transfers }))),
+      ),
       map((res) => ({
         wallets: this._walletsService.filterWalletsInUse(
           res.wallets.data,
@@ -85,6 +95,7 @@ export class AppController {
         trades: res.trades.data,
         withdrawals: res.withdrawals.data,
         deposits: res.deposits.data,
+        transfers: res.deposits.data,
       })),
       map((res) => this._appService.toProfitResponse(res)),
     );

@@ -12,6 +12,7 @@ import {
 } from './profit/models/transaction.interface';
 import { Trade } from './profit/models/trade.interface';
 import { TransferData } from './models/transfers.interface';
+import { Transfer } from './profit/models/transfer.interface';
 
 @Injectable()
 export class AppService {
@@ -86,13 +87,29 @@ export class AppService {
             },
         );
 
-      const withdrawalsOfWallet = res.withdrawals
+      let withdrawalsOfWallet = res.withdrawals
         .filter((withdrawal) => withdrawal.attributes.wallet_id === wallet.id)
         .map((w) => this.toTransaction(w, 'withdrawal'));
 
-      const depositsOfWallet = res.deposits
+      let depositsOfWallet = res.deposits
         .filter((deposit) => deposit.attributes.wallet_id === wallet.id)
         .map((d) => this.toTransaction(d, 'deposit'));
+
+      const transfersOfWallet = res.transfers
+        .filter((deposit) => deposit.attributes.wallet_id === wallet.id)
+        .map((t) => {
+          const transaction = this.toTransaction(t, 'transfer');
+          return <Transfer>{ ...transaction, inOrOut: t.attributes.in_or_out };
+        });
+
+      withdrawalsOfWallet = [
+        ...withdrawalsOfWallet,
+        ...transfersOfWallet.filter((t) => t.inOrOut === 'outgoing'),
+      ];
+      depositsOfWallet = [
+        ...depositsOfWallet,
+        ...transfersOfWallet.filter((t) => t.inOrOut === 'incoming'),
+      ];
 
       const profits = this._profitService.getWalletState(
         tradesOfWallet,
