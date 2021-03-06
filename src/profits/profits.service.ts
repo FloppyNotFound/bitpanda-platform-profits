@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { WalletStateResponseItem } from 'src/profit/models/wallet-state-response-item.interface';
+import plus from '../helpers/plus';
+import { WalletStateResponseItem } from '../profit/models/wallet-state-response-item.interface';
 
 @Injectable()
 export class ProfitsService {
@@ -30,7 +31,7 @@ export class ProfitsService {
           ? Number(profitsPerYear.get(p[0]))
           : 0;
 
-        profitsPerYear.set(p[0], prevVal + p[1]);
+        profitsPerYear.set(p[0], plus(prevVal, p[1]));
       });
     });
 

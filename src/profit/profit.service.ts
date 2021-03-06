@@ -3,7 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { WalletState } from './models/wallet-state.interface';
 import { Crypto } from './models/crypto.interface';
 import * as dayjs from 'dayjs';
-import { Withdrawal } from 'src/models/withdrawal.interface';
+import { Withdrawal } from '../models/withdrawal.interface';
+import minus from '../helpers/minus';
+import plus from '../helpers/plus';
 
 @Injectable()
 export class ProfitService {
@@ -90,8 +92,11 @@ export class ProfitService {
             taxablePerYear.set(yearOfTrade, tax);
           }
 
-          a.amount -= amountOfThisCoinDateToSell;
-          amountCryptosToSell -= amountOfThisCoinDateToSell;
+          a.amount = minus(a.amount, amountOfThisCoinDateToSell);
+          amountCryptosToSell = minus(
+            amountCryptosToSell,
+            amountOfThisCoinDateToSell,
+          );
         });
       } else {
         throw new Error('Unknown trade type ' + trade.attributes.type);
@@ -112,7 +117,7 @@ export class ProfitService {
       cryptoSymbol,
       amountCrypto: Array.from(assets.values())
         .map((d) => d.amount)
-        .reduce((prev, cur) => prev + cur, 0),
+        .reduce((prev, cur) => plus(prev, cur), 0),
       profitPerYear,
       taxablePerYear,
       assets,
@@ -155,10 +160,10 @@ export class ProfitService {
     let newAmountWithdrawals = amountWithdrawals;
 
     if (amountWithdrawals >= assetAmount) {
-      newAmountWithdrawals = amountWithdrawals - assetAmount;
+      newAmountWithdrawals = minus(amountWithdrawals, assetAmount);
       newAssetAmount = 0;
     } else {
-      newAssetAmount = assetAmount - amountWithdrawals;
+      newAssetAmount = minus(assetAmount, amountWithdrawals);
       newAmountWithdrawals = 0;
     }
 
@@ -176,9 +181,9 @@ export class ProfitService {
       .filter((w) => !w.wasHandled && w.unixTime <= untilUnix)
       .map((w) => {
         w.wasHandled = true;
-        return w.amount + w.fee;
+        return plus(w.amount, w.fee);
       })
-      .reduce((prev, cur) => prev + cur, 0);
+      .reduce((prev, cur) => plus(prev, cur), 0);
   }
 
   private getProfit(
@@ -188,9 +193,7 @@ export class ProfitService {
     buyPrice: number,
   ) {
     const profitOfYear = profitPerYear.get(yearOfTrade) ?? 0;
-    const profit =
-      (profitOfYear * 100 + sellPrice * 100 - buyPrice * 100) / 100;
-    return profit;
+    return plus(profitOfYear, minus(sellPrice, buyPrice));
   }
 
   private checkIsOlderThanOneYear(unixBuyTime: number, tradeDate: Date) {
